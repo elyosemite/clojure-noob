@@ -12,9 +12,18 @@
 (if true
   (do (println "Clojure is fun")
       (println "Another text")
-      "By Stackoverflow survey")
+      (println "By Stackoverflow survey"))
   (do (println "This is false")
-      "By batman"))
+      (println "By batman")))
+
+(and :feeling_super_cool nil false)
+
+(defn error-message
+  [severity]
+  (str "Oh GOD! IT IS A DESASTER! WE ARE "
+       (if (= severity :mild)
+         "MILDY INCONVECIENCED!"
+         "DOOOOOMED")))
 
 (when true
   (println "Thamirys is my pretty wife!")
@@ -23,4 +32,5 @@
 (defn -main
   "I don't do a whole lot ... yet."
   [& args]
-  (println "Hello, World!"))
+  (println "Hello, World!")
+  (println error-message :mild))
