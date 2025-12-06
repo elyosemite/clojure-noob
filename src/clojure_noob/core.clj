@@ -11,6 +11,7 @@
 
 (if true
   (do (println "Clojure is fun")
+      (println "Another text")
       "By Stackoverflow survey")
   (do (println "This is false")
       "By batman"))
