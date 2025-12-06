@@ -2,8 +2,16 @@
   (:gen-class))
 
 (if true
-  (do (println "This is true")
-      "By aquaman")
+  (println "Maria is Jesus's mother")
+  (println "Maria is not Jesus's mother"))
+
+(if false
+  (println "Fatima is arabic name")
+  (println "Fatima is not arabic name"))
+
+(if true
+  (do (println "Clojure is fun")
+      "By Stackoverflow survey")
   (do (println "This is false")
       "By batman"))
 
