@@ -3,7 +3,7 @@
 
 (if true
   (println "Maria is Jesus's mother")
-  (println "Maria is not Jesus's mother"))
+  (println "Maria is not Jesus's mother??"))
 
 (if false
   (println "Fatima is arabic name")
@@ -18,12 +18,15 @@
 
 (and :feeling_super_cool nil false)
 
+; Functions
 (defn error-message
   [severity]
   (str "Oh GOD! IT IS A DESASTER! WE ARE "
        (if (= severity :mild)
          "MILDY INCONVECIENCED!"
          "DOOOOOMED")))
+
+ 
 
 (when true
   (println "Thamirys is my pretty wife!")
@@ -33,4 +36,5 @@
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, World!")
+  (println namme)
   (println error-message :mild))
