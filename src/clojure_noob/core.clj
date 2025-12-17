@@ -36,5 +36,4 @@
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, World!")
-  (error-message severity)
-  (println error-message :mild))
+  (println error-message severity))
