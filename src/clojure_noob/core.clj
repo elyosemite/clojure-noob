@@ -24,9 +24,7 @@
   (str "Oh GOD! IT IS A DESASTER! WE ARE "
        (if (= severity :mild)
          "MILDY INCONVECIENCED!"
-         "DOOOOOMED")))
-
- 
+         "DOOOOOMED"))) 
 
 (when true
   (println "Thamirys is my pretty wife!")
@@ -36,5 +34,4 @@
   "I don't do a whole lot ... yet."
   [& args]
   (println "Hello, World!")
-  (println namme)
   (println error-message :mild))
