@@ -7,7 +7,5 @@
 (defn get-price [symbol]
   (get fixed-prices symbol))
 
-;; Random version
 (defn random-price [base]
   (+ base (- (rand 10) 5)))
-
