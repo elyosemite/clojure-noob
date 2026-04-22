@@ -49,4 +49,7 @@
   (println dt/my-nil)
   (fmt/format_with_println)
   (cf/is_maria_mother_of_jesus)
+  (cf/what_is_your_name)
+  (cf/what_is_your_name "Thams")
+  (println (cf/classify-age 22))
   )
