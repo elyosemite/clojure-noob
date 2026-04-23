@@ -52,4 +52,6 @@
   (cf/what_is_your_name)
   (cf/what_is_your_name "Thams")
   (println (cf/classify-age 22))
-  )
+  (cf/can-withdraw "Yuri" 90 90)
+  (println (cf/classifyBalance 90000))
+)
