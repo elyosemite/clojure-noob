@@ -2,7 +2,8 @@
   (:gen-class)
   (:require [clojure-noob.learning.datatypes :as dt]
             [clojure-noob.learning.format :as fmt]
-            [clojure-noob.learning.control-flow :as cf]))
+            [clojure-noob.learning.control-flow :as cf]
+            [clojure-noob.learning.pattern-matching :as pm]))
 
 (and :feeling_super_cool nil false)
 
@@ -54,4 +55,5 @@
   (println (cf/classify-age 22))
   (cf/can-withdraw "Yuri" 90 90)
   (println (cf/classifyBalance 90000))
+  (println (pm/classify-transaction :deposit  98790))
 )

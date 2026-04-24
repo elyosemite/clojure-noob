@@ -12,9 +12,9 @@
 
 (defn classify-transaction [type amount]
     (match [type amount]
-        [:deposit (_:guard #(>= % 10000))] "Large deposit — requires compliance review"
+        [:deposit (_ :guard #(>= % 10000))] "Large deposit - requires compliance review"
         [:deposit _]                       "Regular deposit"
-        [:withdraw (_:guard #(> % 5000))]  "High-value withdrawal — needs authorization"
+        [:withdraw (_ :guard #(> % 5000))]  "High-value withdrawal - needs authorization"
         [:withdraw _]                      "Regular withdrawal"
         [:transfer _]                      "Transafer"    
         :else                              "Unknown transaction type"))

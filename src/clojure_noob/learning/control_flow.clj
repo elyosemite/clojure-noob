@@ -63,15 +63,6 @@
         (< balance 1000) "Low"
         :else            "Healthy"))
 
-;; Diferença do Haskell: case em Clojure compara por igualdade de valor, não destrói estruturas. Para pattern matching estrutural, existe a lib core.match.
-
-(defn classify-score [score]
-    (condp <= score
-        90 "A"
-        75 "B"
-        60 "C"
-        "F"))
-
 ;; -> passa o resultado como primeiro argumento:
 ;; => ["YURI" "MELO"]
 (-> " yuri melo "
