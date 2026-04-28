@@ -42,6 +42,7 @@
         (< age 13) "child"
         (< age 18) "teen"
         (< age 65) "adult"
+        (< age 120) "almost imortal"
         :else "senior"))
 
 (defn describe-role [role]
