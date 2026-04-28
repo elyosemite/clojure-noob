@@ -55,7 +55,9 @@
 ; When
 (defn can-withdraw [name amount limit]
     (when (<= amount limit)
-        (println "Sr." name ", you can withdraw!")))
+        (println "Sr." name ", you can withdraw!"))
+    (when (<= amount 0)
+        (println "Sr." name ", You have a problem!")))
 
 ; Cond
 (defn classifyBalance [balance]

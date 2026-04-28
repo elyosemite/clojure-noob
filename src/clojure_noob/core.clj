@@ -56,4 +56,5 @@
   (cf/can-withdraw "Yuri" 90 90)
   (println (cf/classifyBalance 90000))
   (println (pm/classify-transaction :deposit  98790))
+  (cf/can-withdraw "Yuri Melo" -200 1000)
 )
