@@ -68,7 +68,8 @@
 
 ;; -> passa o resultado como primeiro argumento:
 ;; => ["YURI" "MELO"]
-(-> " yuri melo "
+(defn cleaning-your-name [name]
+(-> name
     clojure.string/trim
     clojure.string/upper-case
-    (clojure.string/split #" "))
+    (clojure.string/split #" ")))
