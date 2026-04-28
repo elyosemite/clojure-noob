@@ -33,7 +33,7 @@
     ([role] role))
 
 (defn what_is_your_name
-    ([]    (what_is_your_name "Yuri Melo"))
+    ([]    (what_is_your_name "Yuri Melo (It will be your default name)"))
     ([msg] (println "My name is" msg (what_is_your_role "Engineer"))))
 
 ; Cond
