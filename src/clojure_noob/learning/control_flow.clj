@@ -27,6 +27,13 @@
         (println "Fatima is arabic name")
         (println "Fatima is not arabic name")))
 
+(defn can-create-bank-account [name age iscriminal]
+    (if (= iscriminal false)
+        (do (println "Please, sr." name ", getting Started here...")
+            (println "Welcome to NATO systems."))
+        (do (println "Our system is taking legal action to have him arrested.")
+            (println "You are wanted!"))))
+
 ; recursion
 (defn what_is_your_role
     ([] (what_is_your_role "Dev"))

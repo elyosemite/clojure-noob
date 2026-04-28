@@ -58,4 +58,6 @@
   (println (pm/classify-transaction :deposit  98790))
   (cf/can-withdraw "Yuri Melo" -200 1000)
   (println (cf/cleaning-your-name "   yuri melo   "))
+  (cf/can-create-bank-account "Yuri Melo" 30 false)
+  (cf/can-create-bank-account "Yuri Melo" 30 true)
 )
