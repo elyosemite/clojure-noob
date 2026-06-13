@@ -19,3 +19,8 @@
   (printf "Leading zeros %04d" aLong)
   (printf "%-4d left justified" aLong)
   (printf "3 decimals %.3f" aDouble))
+
+(defn i_have_the_message_for_you []
+  (println "You are Senior Software Engineer")
+  (println "You are my best friend")
+  (println "Jesus Christ loves you, bro"))
