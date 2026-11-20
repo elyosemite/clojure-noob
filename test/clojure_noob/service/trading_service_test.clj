@@ -76,3 +76,37 @@
       (is (= :invalid-price (get-in r [:error :code])))
       (is (= before @db/db))
       (is (nil? (svc/spread "PETR4"))))))
+
+;; --- matching (US-03) ------------------------------------------------------
+
+(deftest place-order-matching-test
+  (testing "crossing order generates trades and updates resting orders"
+    (let [s1 (svc/place-sell-order! {:symbol "PETR4" :quantity 80 :price 31.20})
+          s2 (svc/place-sell-order! {:symbol "PETR4" :quantity 30 :price 31.20})
+          r  (svc/place-buy-order!  {:symbol "PETR4" :quantity 100 :price 31.30})]
+      (is (= [1 2] [(get-in s1 [:ok :id]) (get-in s2 [:ok :id])]))
+      (testing "incoming order is returned after matching"
+        (is (= [3 :filled 0] ((juxt :id :status :remaining) (:ok r)))))
+      (testing "trades are returned and stored with sequential ids"
+        (is (= [[1 80 31.20M 3 1] [2 20 31.20M 3 2]]
+               (map (juxt :id :quantity :price :buy-order-id :sell-order-id) (:trades r))))
+        (is (= (:trades r) (svc/trades))))
+      (testing "resting orders reflect their fills"
+        (is (= :filled (:status (svc/find-order 1))))
+        (is (= [:partially-filled 10] ((juxt :status :remaining) (svc/find-order 2))))
+        (is (= :filled (:status (svc/find-order 3)))))
+      (testing "book keeps only what was not executed"
+        (is (= [[2 10]] (map (juxt :id :remaining) (svc/asks "PETR4"))))
+        (is (= [] (svc/bids "PETR4")))))))
+
+(deftest place-order-no-trade-test
+  (testing "non-crossing order returns empty trades"
+    (is (= [] (:trades (svc/place-buy-order! valid))))
+    (is (= [] (svc/trades)))))
+
+(deftest rejection-keeps-trade-sequence-test
+  (testing "rejected order creates no trade and does not touch the trade sequence"
+    (svc/place-sell-order! {:symbol "PETR4" :quantity 10 :price 30.00})
+    (let [before @db/db]
+      (is (contains? (svc/place-buy-order! (assoc valid :quantity -1)) :error))
+      (is (= before @db/db)))))
