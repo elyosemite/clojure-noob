@@ -108,3 +108,22 @@
       (is (nil? (book/spread only-bids "PETR4")))
       (is (nil? (book/best-bid book/empty-book "PETR4")))
       (is (nil? (book/spread book/empty-book "PETR4"))))))
+
+;; --- remove-order (US-04) --------------------------------------------------
+
+(deftest remove-order-test
+  (let [b (add-all [(buy 1 "PETR4" 100 31.00 1000)
+                    (buy 2 "PETR4" 50 30.50 1001)
+                    (buy 3 "PETR4" 10 30.00 1002)
+                    (sell 4 "PETR4" 80 31.20 1003)])]
+    (testing "removing from the middle keeps the others in priority order"
+      (is (= [1 3] (map :id (book/bids (book/remove-order b (buy 2 "PETR4" 50 30.50 1001)) "PETR4")))))
+
+    (testing "removing the only ask empties that side and leaves bids untouched"
+      (let [b' (book/remove-order b (sell 4 "PETR4" 80 31.20 1003))]
+        (is (= [] (book/asks b' "PETR4")))
+        (is (= [1 2 3] (map :id (book/bids b' "PETR4"))))))
+
+    (testing "unknown id or symbol leaves the book unchanged"
+      (is (= b (book/remove-order b (buy 99 "PETR4" 1 30.00 1))))
+      (is (= b (book/remove-order b (buy 1 "VALE3" 1 65.00 1)))))))

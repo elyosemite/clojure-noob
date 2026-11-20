@@ -96,3 +96,24 @@
     (doseq [q [0 -1 1.5 101]]
       (is (thrown? clojure.lang.ExceptionInfo (order/fill open-order q))
           (str "quantity " q)))))
+
+;; --- cancel (US-04) --------------------------------------------------------
+
+(deftest cancel-test
+  (testing "open order becomes :cancelled keeping remaining"
+    (is (= [:cancelled 100] ((juxt :status :remaining) (:ok (order/cancel open-order))))))
+
+  (testing "partially filled order becomes :cancelled keeping what was left"
+    (is (= [:cancelled 70]
+           ((juxt :status :remaining) (:ok (order/cancel (order/fill open-order 30))))))))
+
+(deftest cancel-rejection-test
+  (testing "filled order cannot be cancelled"
+    (let [r (order/cancel (order/fill open-order 100))]
+      (is (= :not-cancellable (error-code r)))
+      (is (= "ordem já executada" (get-in r [:error :message])))))
+
+  (testing "cancelled order cannot be cancelled again"
+    (let [r (order/cancel (:ok (order/cancel open-order)))]
+      (is (= :not-cancellable (error-code r)))
+      (is (= "ordem já cancelada" (get-in r [:error :message]))))))

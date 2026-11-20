@@ -53,3 +53,18 @@
     (assoc order
            :remaining left
            :status (if (zero? left) :filled :partially-filled))))
+
+(def ^:private cancellable? #{:open :partially-filled})
+
+(defn cancel
+  "Cancels an :open or :partially-filled order, keeping :remaining as the
+  quantity that will no longer be executed.
+  Returns {:ok order} or {:error {:code :not-cancellable :message str}}."
+  [{:keys [status] :as order}]
+  (if (cancellable? status)
+    {:ok (assoc order :status :cancelled)}
+    (error :not-cancellable
+           (case status
+             :filled    "ordem já executada"
+             :cancelled "ordem já cancelada"
+             (str "ordem não pode ser cancelada (status " (name status) ")")))))
