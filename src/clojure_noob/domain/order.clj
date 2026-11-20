@@ -38,3 +38,6 @@
 
 (defn create-buy-order [params]
   (create-order :buy params))
+
+(defn create-sell-order [params]
+  (create-order :sell params))
