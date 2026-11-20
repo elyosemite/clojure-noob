@@ -57,3 +57,21 @@
                 "  (vazio)\n"
                 "spread: -")
            (term/format-book "VALE3" [] [] nil)))))
+
+;; --- matching (US-03) ------------------------------------------------------
+
+(deftest format-order-result-status-test
+  (testing "filled order"
+    (is (= "[COMPRA]   #9 PETR4   100 @ 30.50  OK executada"
+           (term/format-order-result :buy {} (assoc-in (accepted :buy 9) [:ok :status] :filled)))))
+
+  (testing "partially filled order shows what is left"
+    (is (= "[VENDA]   #10 PETR4   100 @ 30.50  OK executada parcialmente (resta 70)"
+           (term/format-order-result :sell {}
+                                     (update (accepted :sell 10) :ok assoc
+                                             :status :partially-filled :remaining 70))))))
+
+(deftest format-trade-test
+  (is (= "    TRADE PETR4    80 @ 31.20 (compra #9 x venda #5)"
+         (term/format-trade {:id 1 :symbol "PETR4" :quantity 80 :price 31.2M
+                             :buy-order-id 9 :sell-order-id 5 :timestamp 1}))))

@@ -12,6 +12,11 @@
    [:sell {:symbol "PETR4" :quantity 100 :price 31.50}]
    [:sell {:symbol "PETR4" :quantity 30  :price 31.20}]
    [:sell {:symbol "VALE3" :quantity 20  :price 66.00}]
+   ;; crossing orders (US-03)
+   [:buy  {:symbol "PETR4" :quantity 100 :price 31.30}]   ; fills #5 and part of #7
+   [:sell {:symbol "PETR4" :quantity 120 :price 30.80}]   ; fills #2, rest goes to the book
+   [:buy  {:symbol "VALE3" :quantity 30  :price 66.00}]   ; fills #8, rest goes to the book
+   ;; rejected
    [:buy  {:symbol "VALE3" :quantity 0   :price 65.00}]
    [:sell {:symbol "PETR4" :quantity 10  :price -1}]
    [:buy  {:symbol "XPTO3" :quantity 10  :price 10.00}]])
@@ -24,7 +29,10 @@
   "Demo: sends some buy and sell orders and prints the resulting books."
   [& _args]
   (doseq [[side params] demo-orders]
-    (println (term/format-order-result side params ((place! side) params))))
+    (let [result ((place! side) params)]
+      (println (term/format-order-result side params result))
+      (doseq [t (:trades result)]
+        (println (term/format-trade t)))))
   (doseq [symbol ["PETR4" "VALE3"]]
     (println)
     (println (term/format-book symbol (svc/bids symbol) (svc/asks symbol) (svc/spread symbol)))))

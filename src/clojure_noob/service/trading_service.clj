@@ -1,23 +1,41 @@
 (ns clojure-noob.service.trading-service
-  (:require [clojure-noob.domain.order :as order]
+  (:require [clojure-noob.domain.matching :as matching]
+            [clojure-noob.domain.order :as order]
             [clojure-noob.domain.order-book :as book]
+            [clojure-noob.domain.trade :as trade]
             [clojure-noob.repository.db :refer [db]]))
 
 ;; ---------------------------------------------------------------------------
 ;; Functional core
 
+(defn- fills->trades [first-id timestamp aggressor fills]
+  (vec (map-indexed (fn [i {:keys [resting quantity]}]
+                      (trade/create-trade {:id        (+ first-id i)
+                                           :timestamp timestamp
+                                           :aggressor aggressor
+                                           :resting   resting
+                                           :quantity  quantity}))
+                    fills)))
+
 (defn place-order
-  "Pure use case. Returns {:state new-state :result {:ok order}|{:error ...}}.
-  On error the state is returned unchanged (the id is not consumed)."
+  "Pure use case: validates, matches against the book and records everything.
+  Returns {:state new-state :result {:ok order :trades [...]}|{:error ...}}.
+  `order` reflects its status after matching. On error the state is returned
+  unchanged (the id is not consumed)."
   [state side params timestamp]
   (let [id     (:next-id state)
         result (order/create-order side (assoc params :id id :timestamp timestamp))]
-    (if-let [o (:ok result)]
-      {:state  (-> state
-                   (update :book book/add-order o)
-                   (assoc-in [:orders id] o)
-                   (update :next-id inc))
-       :result result}
+    (if-let [incoming (:ok result)]
+      (let [{:keys [book order fills]} (matching/match (:book state) incoming)
+            trades  (fills->trades (:next-trade-id state) timestamp order fills)
+            resting (into {} (map (juxt :id identity)) (map :resting fills))]
+        {:state  (-> state
+                     (assoc :book book)
+                     (update :orders merge resting {id order})
+                     (update :trades into trades)
+                     (update :next-trade-id + (count trades))
+                     (update :next-id inc))
+         :result {:ok order :trades trades}})
       {:state state :result result})))
 
 ;; ---------------------------------------------------------------------------
@@ -56,3 +74,6 @@
 
 (defn find-order [id]
   (get-in @db [:orders id]))
+
+(defn trades []
+  (:trades @db))

@@ -24,15 +24,27 @@
   {:buy  "[COMPRA]"
    :sell "[VENDA] "})
 
+(defn- status-text [{:keys [status remaining]}]
+  (case status
+    :open             "OK registrada"
+    :partially-filled (str "OK executada parcialmente (resta " remaining ")")
+    :filled           "OK executada"
+    (str "OK " (name status))))
+
 (defn format-order-result
   "One line describing an order attempt: `side`, `params` sent and `result` received."
   [side {:keys [symbol quantity price]} {:keys [ok error]}]
   (str (side-label side) " "
        (if ok
          (str (fmt-line (str "#" (:id ok)) (:symbol ok) (:quantity ok) (:price ok))
-              "  OK registrada")
+              "  " (status-text ok))
          (str (fmt-line "" symbol quantity price)
               "  REJEITADA: " (:message error)))))
+
+(defn format-trade
+  [{:keys [symbol quantity price buy-order-id sell-order-id]}]
+  (str "    TRADE " symbol " " (pad-left 5 quantity) " @ " (fmt-price price)
+       " (compra #" buy-order-id " x venda #" sell-order-id ")"))
 
 ;; --- book ------------------------------------------------------------------
 

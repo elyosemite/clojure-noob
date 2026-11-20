@@ -42,3 +42,14 @@
         ask (best-ask book symbol)]
     (when (and bid ask)
       (- (:price ask) (:price bid)))))
+
+(defn replace-best
+  "Replaces the best order of `resting`'s side with `resting` (after a fill).
+  A :filled order is removed from the book. Sorting is preserved because
+  only :remaining/:status change."
+  [book {:keys [side symbol status] :as resting}]
+  (update-in book [symbol (side-key side)]
+             (fn [orders]
+               (if (= :filled status)
+                 (vec (rest orders))
+                 (assoc orders 0 resting)))))
