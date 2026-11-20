@@ -1,9 +1,16 @@
 (ns clojure-noob.service.trading-service-test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [clojure-noob.repository.db :as db]
-            [clojure-noob.service.trading-service :as svc]))
+            [clojure-noob.service.trading-service :as svc]
+            [clojure-noob.service.user-service :as users]))
 
-(use-fixtures :each (fn [t] (db/reset-db!) (t) (db/reset-db!)))
+(def rich-stock {"PETR4" 10000 "VALE3" 10000})
+
+(def seeded
+  "State with user #1 holding plenty of cash and stock."
+  (:state (users/register-user db/initial-state "Teste" 1000000 rich-stock)))
+
+(use-fixtures :each (fn [t] (reset! db/db seeded) (t) (db/reset-db!)))
 
 (def valid {:user-id 1 :symbol "PETR4" :quantity 100 :price 30.50})
 
@@ -11,7 +18,7 @@
 
 (deftest place-order-success-test
   (testing "valid order gets next id, timestamp and lands in book and orders"
-    (let [{:keys [state result]} (svc/place-order db/initial-state :buy valid 1000)
+    (let [{:keys [state result]} (svc/place-order seeded :buy valid 1000)
           o (:ok result)]
       (is (= 1 (:id o)))
       (is (= 1000 (:timestamp o)))
@@ -21,10 +28,10 @@
 
 (deftest place-order-error-test
   (testing "invalid order returns error and leaves state untouched"
-    (let [{:keys [state result]} (svc/place-order db/initial-state :buy
+    (let [{:keys [state result]} (svc/place-order seeded :buy
                                                   (assoc valid :quantity 0) 1000)]
       (is (= :invalid-quantity (get-in result [:error :code])))
-      (is (= db/initial-state state)))))
+      (is (= seeded state)))))
 
 ;; --- imperative shell ------------------------------------------------------
 
@@ -53,7 +60,7 @@
 
 (deftest place-order-sell-test
   (testing "pure core puts sell orders on the asks side"
-    (let [{:keys [state result]} (svc/place-order db/initial-state :sell valid 1000)]
+    (let [{:keys [state result]} (svc/place-order seeded :sell valid 1000)]
       (is (= :sell (get-in result [:ok :side])))
       (is (= [(:ok result)] (get-in state [:book "PETR4" :asks]))))))
 
@@ -160,3 +167,108 @@
     (let [before @db/db]
       (is (= "ordem já cancelada" (get-in (svc/cancel-order! 3) [:error :message])))
       (is (= before @db/db)))))
+
+;; --- settlement (US-05) ----------------------------------------------------
+
+(defn- register! [name balance & [stock]]
+  (get-in (users/register-user! name balance (or stock {})) [:ok :id]))
+
+(defn- wallet [id] (users/find-wallet id))
+
+(deftest unknown-user-test
+  (testing "order from an unregistered user is rejected"
+    (let [before @db/db
+          r      (svc/place-buy-order! (assoc valid :user-id 99))]
+      (is (= :user-not-found (get-in r [:error :code])))
+      (is (= "usuário não encontrado: #99" (get-in r [:error :message])))
+      (is (= before @db/db)))))
+
+(deftest insufficient-funds-test
+  (let [carla (register! "Carla" 1000)]
+    (testing "buy needs quantity x limit in available balance"
+      (let [before @db/db
+            r      (svc/place-buy-order! {:user-id carla :symbol "PETR4" :quantity 100 :price 31.00})]
+        (is (= :insufficient-balance (get-in r [:error :code])))
+        (is (= before @db/db))))
+
+    (testing "sell needs available stock"
+      (let [before @db/db
+            r      (svc/place-sell-order! {:user-id carla :symbol "VALE3" :quantity 10 :price 66.00})]
+        (is (= :insufficient-stock (get-in r [:error :code])))
+        (is (= before @db/db))))))
+
+(deftest reservation-test
+  (let [carla (register! "Carla" 1000 {"VALE3" 5})]
+    (testing "open buy locks quantity x limit"
+      (svc/place-buy-order! {:user-id carla :symbol "PETR4" :quantity 10 :price 30.00})
+      (is (= [700M 300M] ((juxt :balance :reserved-cash) (wallet carla)))))
+
+    (testing "open sell locks stock"
+      (svc/place-sell-order! {:user-id carla :symbol "VALE3" :quantity 5 :price 70.00})
+      (is (= [{} {"VALE3" 5}] ((juxt :stock :reserved-stock) (wallet carla)))))))
+
+(deftest buy-aggressor-settlement-test
+  (testing "buyer pays the resting price and gets the limit difference back"
+    (let [ana   (register! "Ana" 10000)
+          bruno (register! "Bruno" 0 {"PETR4" 500})]
+      (svc/place-sell-order! {:user-id bruno :symbol "PETR4" :quantity 80 :price 31.20})
+      (svc/place-buy-order!  {:user-id ana   :symbol "PETR4" :quantity 100 :price 31.30})
+      ;; Ana reserved 3130; paid 80 x 31.20 = 2496; 80 x 0.10 = 8 back; 20 x 31.30 = 626 still reserved
+      (is (= {:balance 6878M :reserved-cash 626M :stock {"PETR4" 80} :reserved-stock {}}
+             (wallet ana)))
+      (is (= {:balance 2496M :reserved-cash 0M :stock {"PETR4" 420} :reserved-stock {}}
+             (wallet bruno))))))
+
+(deftest sell-aggressor-settlement-test
+  (testing "seller receives the resting buy price; its remaining stays reserved"
+    (let [ana   (register! "Ana" 10000)
+          bruno (register! "Bruno" 0 {"PETR4" 500})]
+      (svc/place-buy-order!  {:user-id ana   :symbol "PETR4" :quantity 50  :price 31.00})
+      (svc/place-sell-order! {:user-id bruno :symbol "PETR4" :quantity 120 :price 30.80})
+      (is (= {:balance 8450M :reserved-cash 0M :stock {"PETR4" 50} :reserved-stock {}}
+             (wallet ana)))
+      (is (= {:balance 1550M :reserved-cash 0M :stock {"PETR4" 380} :reserved-stock {"PETR4" 70}}
+             (wallet bruno))))))
+
+(deftest cancel-releases-reservation-test
+  (let [ana   (register! "Ana" 10000)
+        bruno (register! "Bruno" 0 {"PETR4" 500})
+        buy   (get-in (svc/place-buy-order! {:user-id ana :symbol "PETR4" :quantity 100 :price 31.00})
+                      [:ok :id])]
+    (svc/place-sell-order! {:user-id bruno :symbol "PETR4" :quantity 40 :price 31.00})
+    (testing "cancelled buy returns the cash reserved for its remaining"
+      (svc/cancel-order! buy)
+      (is (= [8760M 0M] ((juxt :balance :reserved-cash) (wallet ana)))))
+
+    (testing "cancelled sell returns its remaining stock"
+      (let [sell (get-in (svc/place-sell-order! {:user-id bruno :symbol "PETR4" :quantity 100 :price 32.00})
+                         [:ok :id])]
+        (is (= {"PETR4" 100} (:reserved-stock (wallet bruno))))
+        (svc/cancel-order! sell)
+        (is (= [{"PETR4" 460} {}] ((juxt :stock :reserved-stock) (wallet bruno))))))))
+
+(defn- totals
+  "Total cash (available + reserved) and stock per symbol across all wallets."
+  []
+  (let [ws (vals (:wallets @db/db))]
+    {:cash  (reduce + (mapcat (juxt :balance :reserved-cash) ws))
+     :stock (apply merge-with + (mapcat (juxt :stock :reserved-stock) ws))}))
+
+(deftest conservation-test
+  (testing "trading and cancelling never create or destroy cash or stock"
+    (let [ana   (register! "Ana" 20000)
+          bruno (register! "Bruno" 5000 {"PETR4" 500 "VALE3" 100})
+          start (totals)]
+      (svc/place-buy-order!  {:user-id ana   :symbol "PETR4" :quantity 100 :price 30.50})
+      (svc/place-sell-order! {:user-id bruno :symbol "PETR4" :quantity 80  :price 31.20})
+      (svc/place-buy-order!  {:user-id ana   :symbol "PETR4" :quantity 150 :price 31.40})
+      (svc/place-sell-order! {:user-id bruno :symbol "PETR4" :quantity 200 :price 30.00})
+      (svc/place-sell-order! {:user-id bruno :symbol "VALE3" :quantity 20  :price 66.00})
+      (svc/place-buy-order!  {:user-id ana   :symbol "VALE3" :quantity 30  :price 67.00})
+      (doseq [id (keys (:orders @db/db))] (svc/cancel-order! id))
+      (is (seq (svc/trades)))
+      (is (= (:cash start) (:cash (totals))))
+      (is (= (:stock start) (:stock (totals))))
+      (testing "after cancelling everything nothing stays reserved"
+        (is (every? #(and (zero? (:reserved-cash %)) (empty? (:reserved-stock %)))
+                    (vals (:wallets @db/db))))))))

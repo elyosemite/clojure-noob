@@ -1,7 +1,8 @@
 (ns clojure-noob.core
   (:gen-class)
   (:require [clojure-noob.presentation.terminal :as term]
-            [clojure-noob.service.trading-service :as svc]))
+            [clojure-noob.service.trading-service :as svc]
+            [clojure-noob.service.user-service :as users]))
 
 (def demo-orders
   [[:buy  {:user-id 1 :symbol "PETR4" :quantity 100 :price 30.50}]
@@ -42,6 +43,7 @@
 (defn -main
   "Demo: sends buy and sell orders, cancels some of them and prints the books."
   [& _args]
+  (users/register-user! "Demo" 1000000 {"PETR4" 10000 "VALE3" 10000})
   (doseq [[side params] demo-orders]
     (let [result ((place! side) params)]
       (println (term/format-order-result side params result))
