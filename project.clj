@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.12.2"]
                  [org.clojure/core.match "1.1.0"]]
   :main ^:skip-aot clojure-noob.core
+  :jvm-opts ["-Dstdout.encoding=UTF-8" "-Dstderr.encoding=UTF-8"]
   :target-path "target/%s"
   :test-paths ["test"]
   :profiles {:uberjar {:aot :all

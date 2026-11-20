@@ -11,7 +11,7 @@ Arquitetura: [doc/architecture-guidelines.md](doc/architecture-guidelines.md).
 
 ## Uso
 
-Rodar a demonstração (envia ordens de compra e imprime o livro):
+Rodar a demonstração (envia ordens de compra e venda e imprime o livro):
 
     $ lein run
 
@@ -19,11 +19,18 @@ Exemplo de saída:
 
     [COMPRA]   #1 PETR4   100 @ 30.50  OK registrada
     [COMPRA]   #2 PETR4    50 @ 31.00  OK registrada
+    [VENDA]    #5 PETR4    80 @ 31.20  OK registrada
+    [VENDA]    #6 PETR4   100 @ 31.50  OK registrada
     [COMPRA]      VALE3     0 @ 65.00  REJEITADA: quantidade deve ser um inteiro > 0
 
-    === LIVRO PETR4 - COMPRA ===
-      #2     50 @ 31.00
-      #1    100 @ 30.50
+    === LIVRO PETR4 ===
+            COMPRA         |        VENDA
+       #2     50 @   31.00 |    #5     80 @   31.20
+       #1    100 @   30.50 |    #6    100 @   31.50
+    spread: 0.20
+
+Compra é ordenada do maior para o menor preço e venda do menor para o maior;
+no empate de preço, a ordem mais antiga vem primeiro.
 
 Rodar os testes:
 

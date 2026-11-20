@@ -48,3 +48,31 @@
   (testing "timestamp comes from the clock"
     (with-redefs [svc/now (constantly 42)]
       (is (= 42 (get-in (svc/place-buy-order! valid) [:ok :timestamp]))))))
+
+;; --- sell side (US-02) -----------------------------------------------------
+
+(deftest place-order-sell-test
+  (testing "pure core puts sell orders on the asks side"
+    (let [{:keys [state result]} (svc/place-order db/initial-state :sell valid 1000)]
+      (is (= :sell (get-in result [:ok :side])))
+      (is (= [(:ok result)] (get-in state [:book "PETR4" :asks]))))))
+
+(deftest place-sell-order!-test
+  (testing "registers sell orders sharing the id sequence with buys"
+    (let [b (svc/place-buy-order! valid)
+          s (svc/place-sell-order! (assoc valid :price 31.20 :quantity 80))]
+      (is (= [1 2] [(get-in b [:ok :id]) (get-in s [:ok :id])]))
+      (is (= [1] (map :id (svc/bids "PETR4"))))
+      (is (= [2] (map :id (svc/asks "PETR4"))))
+      (is (= (:ok s) (svc/find-order 2)))))
+
+  (testing "spread reflects best bid and best ask"
+    (is (= 0.70M (svc/spread "PETR4")))))
+
+(deftest place-sell-order!-rejection-test
+  (testing "rejected sell order leaves state untouched"
+    (let [before @db/db
+          r      (svc/place-sell-order! (assoc valid :price 0))]
+      (is (= :invalid-price (get-in r [:error :code])))
+      (is (= before @db/db))
+      (is (nil? (svc/spread "PETR4"))))))
