@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 ### Added
+- US-04: cancelamento de ordem (`order/cancel`, `order-book/remove-order`, `cancel-order!`), com erros `:order-not-found` e `:not-cancellable`.
+- Terminal exibe cancelamentos e os livros antes e depois deles.
 - US-03: motor de casamento puro (`domain/matching`) em prioridade preço-tempo, ao preço da ordem que estava no livro, com execução parcial e por vários níveis.
 - `order/fill` (status `:partially-filled` / `:filled`) e `domain/trade` (`create-trade`).
 - `trading-service` registra trades (`trades`) e atualiza as ordens que estavam no livro; resultado passa a ser `{:ok ordem :trades [...]}`.

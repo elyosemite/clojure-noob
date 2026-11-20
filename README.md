@@ -42,6 +42,14 @@ podendo consumir vários níveis de preço. O saldo não executado fica no livro
     [VENDA]   #10 PETR4   120 @ 30.80  OK executada parcialmente (resta 70)
         TRADE PETR4    50 @ 31.00 (compra #2 x venda #10)
 
+Ordens abertas ou parcialmente executadas podem ser canceladas; o saldo sai do
+livro. Ordens já executadas, já canceladas ou inexistentes são rejeitadas:
+
+    [CANCELA]   #4 PETR4   200 @ 30.50  OK cancelada
+    [CANCELA]   #7 PETR4    10 @ 31.20  OK cancelada
+    [CANCELA]   #5  REJEITADO: ordem já executada
+    [CANCELA]  #99  REJEITADO: ordem não encontrada: #99
+
 Rodar os testes:
 
     $ lein test
