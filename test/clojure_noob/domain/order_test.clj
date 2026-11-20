@@ -52,3 +52,26 @@
   (testing "errors carry a human readable message"
     (is (string? (get-in (order/create-buy-order (assoc valid-params :quantity 0))
                          [:error :message])))))
+
+(deftest create-sell-order-valid-test
+  (testing "valid params create an open sell order"
+    (is (= {:id 1
+            :side :sell
+            :symbol "PETR4"
+            :quantity 100
+            :remaining 100
+            :price 30.50M
+            :status :open
+            :timestamp 1000}
+           (:ok (order/create-sell-order valid-params))))))
+
+(deftest create-sell-order-validation-test
+  (testing "sell orders follow the same validation rules as buy orders"
+    (doseq [[field value code] [[:symbol "  "     :invalid-symbol]
+                                [:symbol "XPTO3"  :unknown-symbol]
+                                [:quantity 0      :invalid-quantity]
+                                [:quantity 1.5    :invalid-quantity]
+                                [:price -1        :invalid-price]
+                                [:price "30"      :invalid-price]]]
+      (is (= code (error-code (order/create-sell-order (assoc valid-params field value))))
+          (str field " " (pr-str value))))))
