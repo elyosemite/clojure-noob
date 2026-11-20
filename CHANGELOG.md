@@ -2,23 +2,16 @@
 All notable changes to this project will be documented in this file. This change log follows the conventions of [keepachangelog.com](https://keepachangelog.com/).
 
 ## [Unreleased]
-### Changed
-- Add a new arity to `make-widget-async` to provide a different widget shape.
+### Added
+- US-01: ordem de compra limitada (`create-buy-order`) com validação de ativo, quantidade e preço (`bigdec`).
+- Order book puro (`domain/order-book`) com lado de compra em prioridade preço-tempo.
+- Repositório em memória (`repository/db`) e serviço `place-buy-order!` (`service/trading-service`).
+- Saída no terminal (`presentation/terminal`) e demonstração de compras no `-main`.
 
-## [0.1.1] - 2025-12-03
 ### Changed
-- Documentation on how to make the widgets.
-
-### Removed
-- `make-widget-sync` - we're all async, all the time.
+- `-main` não executa mais os exemplos de `learning/*`.
+- Arquitetura passa a incluir order book e matching engine (seção 5.8).
 
 ### Fixed
-- Fixed widget maker to keep working when daylight savings switches over.
-
-## 0.1.0 - 2025-12-03
-### Added
-- Files from the new template.
-- Widget maker public API - `make-widget-sync`.
-
-[Unreleased]: https://sourcehost.site/your-name/clojure-noob/compare/0.1.1...HEAD
-[0.1.1]: https://sourcehost.site/your-name/clojure-noob/compare/0.1.0...0.1.1
+- Erro de compilação em `domain/order` (`System/currentTimeMillis`).
+- Erro de compilação em `learning/helloworld` (`str`).

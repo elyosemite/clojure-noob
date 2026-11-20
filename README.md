@@ -1,32 +1,42 @@
 # clojure-noob
 
-FIXME: description
+Order book (livro de ofertas) simulado para o mercado financeiro, escrito em Clojure
+para estudo. Estado apenas em memória, sem banco de dados.
+Arquitetura: [doc/architecture-guidelines.md](doc/architecture-guidelines.md).
 
-## Installation
+## Requisitos
 
-Download from https://example.com/FIXME.
+- Java 11+
+- [Leiningen](https://leiningen.org/)
 
-## Usage
+## Uso
 
-FIXME: explanation
+Rodar a demonstração (envia ordens de compra e imprime o livro):
 
-    $ java -jar clojure-noob-0.1.0-standalone.jar [args]
+    $ lein run
 
-## Options
+Exemplo de saída:
 
-FIXME: listing of options this app accepts.
+    [COMPRA]   #1 PETR4   100 @ 30.50  OK registrada
+    [COMPRA]   #2 PETR4    50 @ 31.00  OK registrada
+    [COMPRA]      VALE3     0 @ 65.00  REJEITADA: quantidade deve ser um inteiro > 0
 
-## Examples
+    === LIVRO PETR4 - COMPRA ===
+      #2     50 @ 31.00
+      #1    100 @ 30.50
 
-...
+Rodar os testes:
 
-### Bugs
+    $ lein test
 
-...
+## Estrutura
 
-### Any Other Sections
-### That You Think
-### Might be Useful
+    src/clojure_noob/
+      domain/        regras puras (order, order-book, market, wallet, user)
+      repository/    estado em memória (atom)
+      service/       casos de uso (trading-service)
+      presentation/  formatação para o terminal
+      learning/      exercícios de estudo de Clojure
 
 ## License
 
