@@ -52,3 +52,59 @@
           updated  (book/add-order original (buy 2 "PETR4" 50 31.00 1001))]
       (is (= [1] (map :id (book/bids original "PETR4"))))
       (is (= [2 1] (map :id (book/bids updated "PETR4")))))))
+
+;; --- sell side (US-02) -----------------------------------------------------
+
+(defn- sell [id symbol quantity price timestamp]
+  (:ok (order/create-sell-order {:id id :symbol symbol :quantity quantity
+                                 :price price :timestamp timestamp})))
+
+(deftest asks-empty-test
+  (testing "empty book has no asks"
+    (is (= [] (book/asks book/empty-book "PETR4")))))
+
+(deftest asks-price-priority-test
+  (testing "lowest price comes first"
+    (let [b (add-all [(sell 1 "PETR4" 100 31.50 1000)
+                      (sell 2 "PETR4" 50 31.20 1001)
+                      (sell 3 "PETR4" 10 32.00 1002)])]
+      (is (= [2 1 3] (map :id (book/asks b "PETR4")))))))
+
+(deftest asks-time-priority-test
+  (testing "same price: oldest first, then lower id"
+    (let [b (add-all [(sell 3 "PETR4" 10 31.00 1000)
+                      (sell 1 "PETR4" 100 31.00 2000)
+                      (sell 2 "PETR4" 50 31.00 1000)])]
+      (is (= [2 3 1] (map :id (book/asks b "PETR4")))))))
+
+(deftest sides-are-independent-test
+  (testing "buy orders go to bids and sell orders go to asks"
+    (let [b (add-all [(buy 1 "PETR4" 100 30.50 1000)
+                      (sell 2 "PETR4" 80 31.20 1001)])]
+      (is (= [1] (map :id (book/bids b "PETR4"))))
+      (is (= [2] (map :id (book/asks b "PETR4"))))))
+
+  (testing "crossing prices stay resting until matching exists (US-03)"
+    (let [b (add-all [(buy 1 "PETR4" 100 31.00 1000)
+                      (sell 2 "PETR4" 100 30.00 1001)])]
+      (is (= [1] (map :id (book/bids b "PETR4"))))
+      (is (= [2] (map :id (book/asks b "PETR4")))))))
+
+(deftest best-prices-and-spread-test
+  (let [b (add-all [(buy 1 "PETR4" 100 30.50 1000)
+                    (buy 2 "PETR4" 50 31.00 1001)
+                    (sell 3 "PETR4" 80 31.20 1002)
+                    (sell 4 "PETR4" 100 31.50 1003)])]
+    (testing "best bid is the highest buy, best ask is the lowest sell"
+      (is (= 2 (:id (book/best-bid b "PETR4"))))
+      (is (= 3 (:id (book/best-ask b "PETR4")))))
+
+    (testing "spread = best ask - best bid"
+      (is (= 0.20M (book/spread b "PETR4")))))
+
+  (testing "missing side yields nil best price and nil spread"
+    (let [only-bids (add-all [(buy 1 "PETR4" 100 30.50 1000)])]
+      (is (nil? (book/best-ask only-bids "PETR4")))
+      (is (nil? (book/spread only-bids "PETR4")))
+      (is (nil? (book/best-bid book/empty-book "PETR4")))
+      (is (nil? (book/spread book/empty-book "PETR4"))))))
