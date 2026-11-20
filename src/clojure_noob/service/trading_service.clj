@@ -38,6 +38,23 @@
          :result {:ok order :trades trades}})
       {:state state :result result})))
 
+(defn cancel-order
+  "Pure use case: cancels order `id` and removes it from the book.
+  Returns {:state new-state :result {:ok order}|{:error ...}}.
+  Errors: :order-not-found, :not-cancellable (state unchanged)."
+  [state id]
+  (if-let [existing (get-in state [:orders id])]
+    (let [result (order/cancel existing)]
+      (if-let [cancelled (:ok result)]
+        {:state  (-> state
+                     (update :book book/remove-order cancelled)
+                     (assoc-in [:orders id] cancelled))
+         :result result}
+        {:state state :result result}))
+    {:state  state
+     :result {:error {:code    :order-not-found
+                      :message (str "ordem não encontrada: #" id)}}}))
+
 ;; ---------------------------------------------------------------------------
 ;; Imperative shell
 
@@ -77,3 +94,9 @@
 
 (defn trades []
   (:trades @db))
+
+(defn cancel-order!
+  "Cancels order `id`. Returns {:ok order} or {:error {:code :message}}."
+  [id]
+  (let [[old _] (swap-vals! db #(:state (cancel-order % id)))]
+    (:result (cancel-order old id))))

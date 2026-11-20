@@ -110,3 +110,53 @@
     (let [before @db/db]
       (is (contains? (svc/place-buy-order! (assoc valid :quantity -1)) :error))
       (is (= before @db/db)))))
+
+;; --- cancel (US-04) --------------------------------------------------------
+
+(deftest cancel-open-order-test
+  (testing "open order is cancelled and leaves the book"
+    (svc/place-buy-order! valid)
+    (svc/place-buy-order! (assoc valid :price 31.00))
+    (let [r (svc/cancel-order! 1)]
+      (is (= [1 :cancelled 100] ((juxt :id :status :remaining) (:ok r))))
+      (is (= :cancelled (:status (svc/find-order 1))))
+      (is (= [2] (map :id (svc/bids "PETR4")))))))
+
+(deftest cancel-partially-filled-order-test
+  (testing "partially filled order is cancelled and its remaining leaves the book"
+    (svc/place-sell-order! {:symbol "PETR4" :quantity 100 :price 31.00})
+    (svc/place-buy-order!  {:symbol "PETR4" :quantity 40  :price 31.00})
+    (let [r (svc/cancel-order! 1)]
+      (is (= [:cancelled 60] ((juxt :status :remaining) (:ok r))))
+      (is (= [] (svc/asks "PETR4"))))))
+
+(deftest cancelled-order-does-not-match-test
+  (testing "a new crossing order does not trade with a cancelled one"
+    (svc/place-sell-order! {:symbol "PETR4" :quantity 100 :price 31.00})
+    (svc/cancel-order! 1)
+    (let [r (svc/place-buy-order! {:symbol "PETR4" :quantity 100 :price 31.00})]
+      (is (= [] (:trades r)))
+      (is (= :open (get-in r [:ok :status]))))))
+
+(deftest cancel-errors-test
+  (svc/place-sell-order! {:symbol "PETR4" :quantity 10 :price 31.00})
+  (svc/place-buy-order!  {:symbol "PETR4" :quantity 10 :price 31.00})   ; fills #1 and #2
+  (svc/place-buy-order!  valid)                                          ; #3 open
+
+  (testing "unknown id"
+    (let [before @db/db
+          r      (svc/cancel-order! 99)]
+      (is (= :order-not-found (get-in r [:error :code])))
+      (is (= "ordem não encontrada: #99" (get-in r [:error :message])))
+      (is (= before @db/db))))
+
+  (testing "filled order"
+    (let [before @db/db]
+      (is (= :not-cancellable (get-in (svc/cancel-order! 1) [:error :code])))
+      (is (= before @db/db))))
+
+  (testing "cancelling twice"
+    (is (contains? (svc/cancel-order! 3) :ok))
+    (let [before @db/db]
+      (is (= "ordem já cancelada" (get-in (svc/cancel-order! 3) [:error :message])))
+      (is (= before @db/db)))))
