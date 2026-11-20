@@ -199,11 +199,33 @@ Simulates stock prices.
 **Constraints**
 
 * No real market data
-* No order book or matching engine
+* Reference prices only; trade prices come from the order book (see 5.8)
 
 **Layer**
 
 * Domain: market logic
+
+---
+
+### 5.8 Order Book and Matching Engine
+
+**Responsibility**
+Keeps resting limit orders per symbol and matches buyers against sellers.
+
+**Key Concepts**
+
+* One book per symbol, with two sides: bids (buy) and asks (sell)
+* Price-time priority: bids sorted by highest price, asks by lowest price; ties broken by the oldest order
+* A new order that crosses the opposite side is executed at the resting order's price
+* Partial fills leave the remaining quantity in the book
+* Order status: `:open`, `:partially-filled`, `:filled`, `:cancelled`
+* Prices are stored as `bigdec` to avoid floating-point errors
+
+**Layer**
+
+* Domain: order-book (pure functions: book in, new book out)
+* Service: trading-service (validation, orchestration)
+* Repository: in-memory atom holding the book, orders and trades
 
 ---
 

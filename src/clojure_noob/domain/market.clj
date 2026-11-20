@@ -9,3 +9,6 @@
 
 (defn random-price [base]
   (+ base (- (rand 10) 5)))
+
+(defn known-symbol? [symbol]
+  (contains? fixed-prices symbol))
