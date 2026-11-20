@@ -41,6 +41,15 @@
          (str (fmt-line "" symbol quantity price)
               "  REJEITADA: " (:message error)))))
 
+(defn format-cancel-result
+  "One line describing a cancel attempt of order `id`."
+  [id {:keys [ok error]}]
+  (str "[CANCELA] "
+       (if ok
+         (str (fmt-line (str "#" (:id ok)) (:symbol ok) (:remaining ok) (:price ok))
+              "  OK cancelada")
+         (str (pad-left 4 (str "#" id)) "  REJEITADO: " (:message error)))))
+
 (defn format-trade
   [{:keys [symbol quantity price buy-order-id sell-order-id]}]
   (str "    TRADE " symbol " " (pad-left 5 quantity) " @ " (fmt-price price)

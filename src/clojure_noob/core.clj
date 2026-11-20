@@ -21,18 +21,34 @@
    [:sell {:symbol "PETR4" :quantity 10  :price -1}]
    [:buy  {:symbol "XPTO3" :quantity 10  :price 10.00}]])
 
+(def demo-cancels
+  [4    ; open
+   7    ; partially filled
+   5    ; already filled  -> error
+   99   ; does not exist   -> error
+   4])  ; already cancelled -> error
+
 (def ^:private place!
   {:buy  svc/place-buy-order!
    :sell svc/place-sell-order!})
 
+(defn- print-books [title]
+  (println)
+  (println (str "##### " title " #####"))
+  (doseq [symbol ["PETR4" "VALE3"]]
+    (println)
+    (println (term/format-book symbol (svc/bids symbol) (svc/asks symbol) (svc/spread symbol)))))
+
 (defn -main
-  "Demo: sends some buy and sell orders and prints the resulting books."
+  "Demo: sends buy and sell orders, cancels some of them and prints the books."
   [& _args]
   (doseq [[side params] demo-orders]
     (let [result ((place! side) params)]
       (println (term/format-order-result side params result))
       (doseq [t (:trades result)]
         (println (term/format-trade t)))))
-  (doseq [symbol ["PETR4" "VALE3"]]
-    (println)
-    (println (term/format-book symbol (svc/bids symbol) (svc/asks symbol) (svc/spread symbol)))))
+  (print-books "LIVROS ANTES DOS CANCELAMENTOS")
+  (println)
+  (doseq [id demo-cancels]
+    (println (term/format-cancel-result id (svc/cancel-order! id))))
+  (print-books "LIVROS DEPOIS DOS CANCELAMENTOS"))
