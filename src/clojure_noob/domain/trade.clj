@@ -11,5 +11,7 @@
      :quantity      quantity
      :price         (:price resting)
      :buy-order-id  (:id buy)
+     :buyer-id      (:user-id buy)
      :sell-order-id (:id sell)
+     :seller-id     (:user-id sell)
      :timestamp     timestamp}))

@@ -4,22 +4,22 @@
             [clojure-noob.service.trading-service :as svc]))
 
 (def demo-orders
-  [[:buy  {:symbol "PETR4" :quantity 100 :price 30.50}]
-   [:buy  {:symbol "PETR4" :quantity 50  :price 31.00}]
-   [:buy  {:symbol "VALE3" :quantity 10  :price 65.00}]
-   [:buy  {:symbol "PETR4" :quantity 200 :price 30.50}]
-   [:sell {:symbol "PETR4" :quantity 80  :price 31.20}]
-   [:sell {:symbol "PETR4" :quantity 100 :price 31.50}]
-   [:sell {:symbol "PETR4" :quantity 30  :price 31.20}]
-   [:sell {:symbol "VALE3" :quantity 20  :price 66.00}]
+  [[:buy  {:user-id 1 :symbol "PETR4" :quantity 100 :price 30.50}]
+   [:buy  {:user-id 1 :symbol "PETR4" :quantity 50  :price 31.00}]
+   [:buy  {:user-id 1 :symbol "VALE3" :quantity 10  :price 65.00}]
+   [:buy  {:user-id 1 :symbol "PETR4" :quantity 200 :price 30.50}]
+   [:sell {:user-id 1 :symbol "PETR4" :quantity 80  :price 31.20}]
+   [:sell {:user-id 1 :symbol "PETR4" :quantity 100 :price 31.50}]
+   [:sell {:user-id 1 :symbol "PETR4" :quantity 30  :price 31.20}]
+   [:sell {:user-id 1 :symbol "VALE3" :quantity 20  :price 66.00}]
    ;; crossing orders (US-03)
-   [:buy  {:symbol "PETR4" :quantity 100 :price 31.30}]   ; fills #5 and part of #7
-   [:sell {:symbol "PETR4" :quantity 120 :price 30.80}]   ; fills #2, rest goes to the book
-   [:buy  {:symbol "VALE3" :quantity 30  :price 66.00}]   ; fills #8, rest goes to the book
+   [:buy  {:user-id 1 :symbol "PETR4" :quantity 100 :price 31.30}]   ; fills #5 and part of #7
+   [:sell {:user-id 1 :symbol "PETR4" :quantity 120 :price 30.80}]   ; fills #2, rest goes to the book
+   [:buy  {:user-id 1 :symbol "VALE3" :quantity 30  :price 66.00}]   ; fills #8, rest goes to the book
    ;; rejected
-   [:buy  {:symbol "VALE3" :quantity 0   :price 65.00}]
-   [:sell {:symbol "PETR4" :quantity 10  :price -1}]
-   [:buy  {:symbol "XPTO3" :quantity 10  :price 10.00}]])
+   [:buy  {:user-id 1 :symbol "VALE3" :quantity 0   :price 65.00}]
+   [:sell {:user-id 1 :symbol "PETR4" :quantity 10  :price -1}]
+   [:buy  {:user-id 1 :symbol "XPTO3" :quantity 10  :price 10.00}]])
 
 (def demo-cancels
   [4    ; open

@@ -7,8 +7,11 @@
 
 (defn- validate
   "Returns an error map for the first broken rule, or nil when params are valid."
-  [{:keys [symbol quantity price]}]
+  [{:keys [user-id symbol quantity price]}]
   (cond
+    (nil? user-id)
+    (error :invalid-user "usuário não informado")
+
     (or (not (string? symbol)) (str/blank? symbol))
     (error :invalid-symbol "ativo não informado")
 
@@ -25,9 +28,10 @@
   "Builds a limit order for `side` (:buy or :sell).
   `id` and `timestamp` are injected to keep the function pure.
   Returns {:ok order} or {:error {:code kw :message str}}."
-  [side {:keys [id symbol quantity price timestamp] :as params}]
+  [side {:keys [id user-id symbol quantity price timestamp] :as params}]
   (or (validate params)
       {:ok {:id        id
+            :user-id   user-id
             :side      side
             :symbol    symbol
             :quantity  quantity

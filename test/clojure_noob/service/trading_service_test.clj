@@ -5,7 +5,7 @@
 
 (use-fixtures :each (fn [t] (db/reset-db!) (t) (db/reset-db!)))
 
-(def valid {:symbol "PETR4" :quantity 100 :price 30.50})
+(def valid {:user-id 1 :symbol "PETR4" :quantity 100 :price 30.50})
 
 ;; --- functional core -------------------------------------------------------
 
@@ -81,9 +81,9 @@
 
 (deftest place-order-matching-test
   (testing "crossing order generates trades and updates resting orders"
-    (let [s1 (svc/place-sell-order! {:symbol "PETR4" :quantity 80 :price 31.20})
-          s2 (svc/place-sell-order! {:symbol "PETR4" :quantity 30 :price 31.20})
-          r  (svc/place-buy-order!  {:symbol "PETR4" :quantity 100 :price 31.30})]
+    (let [s1 (svc/place-sell-order! {:user-id 1 :symbol "PETR4" :quantity 80 :price 31.20})
+          s2 (svc/place-sell-order! {:user-id 1 :symbol "PETR4" :quantity 30 :price 31.20})
+          r  (svc/place-buy-order!  {:user-id 1 :symbol "PETR4" :quantity 100 :price 31.30})]
       (is (= [1 2] [(get-in s1 [:ok :id]) (get-in s2 [:ok :id])]))
       (testing "incoming order is returned after matching"
         (is (= [3 :filled 0] ((juxt :id :status :remaining) (:ok r)))))
@@ -106,7 +106,7 @@
 
 (deftest rejection-keeps-trade-sequence-test
   (testing "rejected order creates no trade and does not touch the trade sequence"
-    (svc/place-sell-order! {:symbol "PETR4" :quantity 10 :price 30.00})
+    (svc/place-sell-order! {:user-id 1 :symbol "PETR4" :quantity 10 :price 30.00})
     (let [before @db/db]
       (is (contains? (svc/place-buy-order! (assoc valid :quantity -1)) :error))
       (is (= before @db/db)))))
@@ -124,23 +124,23 @@
 
 (deftest cancel-partially-filled-order-test
   (testing "partially filled order is cancelled and its remaining leaves the book"
-    (svc/place-sell-order! {:symbol "PETR4" :quantity 100 :price 31.00})
-    (svc/place-buy-order!  {:symbol "PETR4" :quantity 40  :price 31.00})
+    (svc/place-sell-order! {:user-id 1 :symbol "PETR4" :quantity 100 :price 31.00})
+    (svc/place-buy-order!  {:user-id 1 :symbol "PETR4" :quantity 40  :price 31.00})
     (let [r (svc/cancel-order! 1)]
       (is (= [:cancelled 60] ((juxt :status :remaining) (:ok r))))
       (is (= [] (svc/asks "PETR4"))))))
 
 (deftest cancelled-order-does-not-match-test
   (testing "a new crossing order does not trade with a cancelled one"
-    (svc/place-sell-order! {:symbol "PETR4" :quantity 100 :price 31.00})
+    (svc/place-sell-order! {:user-id 1 :symbol "PETR4" :quantity 100 :price 31.00})
     (svc/cancel-order! 1)
-    (let [r (svc/place-buy-order! {:symbol "PETR4" :quantity 100 :price 31.00})]
+    (let [r (svc/place-buy-order! {:user-id 1 :symbol "PETR4" :quantity 100 :price 31.00})]
       (is (= [] (:trades r)))
       (is (= :open (get-in r [:ok :status]))))))
 
 (deftest cancel-errors-test
-  (svc/place-sell-order! {:symbol "PETR4" :quantity 10 :price 31.00})
-  (svc/place-buy-order!  {:symbol "PETR4" :quantity 10 :price 31.00})   ; fills #1 and #2
+  (svc/place-sell-order! {:user-id 1 :symbol "PETR4" :quantity 10 :price 31.00})
+  (svc/place-buy-order!  {:user-id 1 :symbol "PETR4" :quantity 10 :price 31.00})   ; fills #1 and #2
   (svc/place-buy-order!  valid)                                          ; #3 open
 
   (testing "unknown id"
