@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 ### Added
+- US-03: motor de casamento puro (`domain/matching`) em prioridade preço-tempo, ao preço da ordem que estava no livro, com execução parcial e por vários níveis.
+- `order/fill` (status `:partially-filled` / `:filled`) e `domain/trade` (`create-trade`).
+- `trading-service` registra trades (`trades`) e atualiza as ordens que estavam no livro; resultado passa a ser `{:ok ordem :trades [...]}`.
+- Terminal exibe trades e o status de execução de cada ordem.
 - US-02: ordem de venda limitada (`create-sell-order`, `place-sell-order!`).
 - Lado de venda no order book (asks em prioridade preço-tempo), `best-bid`, `best-ask` e `spread`.
 - Livro completo lado a lado (compra | venda) com spread no terminal (`format-book`).

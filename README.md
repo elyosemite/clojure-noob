@@ -32,6 +32,16 @@ Exemplo de saída:
 Compra é ordenada do maior para o menor preço e venda do menor para o maior;
 no empate de preço, a ordem mais antiga vem primeiro.
 
+Quando uma ordem nova cruza o lado oposto (compra >= melhor venda, ou venda <=
+melhor compra), ela é executada ao preço da ordem que já estava no livro,
+podendo consumir vários níveis de preço. O saldo não executado fica no livro:
+
+    [COMPRA]   #9 PETR4   100 @ 31.30  OK executada
+        TRADE PETR4    80 @ 31.20 (compra #9 x venda #5)
+        TRADE PETR4    20 @ 31.20 (compra #9 x venda #7)
+    [VENDA]   #10 PETR4   120 @ 30.80  OK executada parcialmente (resta 70)
+        TRADE PETR4    50 @ 31.00 (compra #2 x venda #10)
+
 Rodar os testes:
 
     $ lein test
@@ -39,7 +49,7 @@ Rodar os testes:
 ## Estrutura
 
     src/clojure_noob/
-      domain/        regras puras (order, order-book, market, wallet, user)
+      domain/        regras puras (order, order-book, matching, trade, market, wallet, user)
       repository/    estado em memória (atom)
       service/       casos de uso (trading-service)
       presentation/  formatação para o terminal
