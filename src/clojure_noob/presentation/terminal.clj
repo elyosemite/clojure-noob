@@ -80,3 +80,33 @@
                              (concat bids (repeat (- rows (count bids)) nil))
                              (concat asks (repeat (- rows (count asks)) nil))))
                       [(str "spread: " (if spread (fmt-price spread) "-"))]))))
+
+;; --- users and wallets (US-05) ---------------------------------------------
+
+(defn- fmt-stock [stock]
+  (apply str (for [[symbol quantity] (sort stock)] (str "  " symbol " " quantity))))
+
+(defn format-user-result
+  "One line describing a user registration attempt."
+  [{:keys [name balance stock]} {:keys [ok error]}]
+  (str "[USUÁRIO] "
+       (if ok
+         (str (pad-left 4 (str "#" (:id ok))) " " (:name ok)
+              "  saldo " (fmt-price balance) (fmt-stock stock))
+         (str (pad-left 4 "") "  REJEITADO: " (:message error) " (" (pr-str name) ")"))))
+
+(defn- reserved-suffix [x fmt]
+  (when (and x (pos? x)) (str " (reservado " (fmt x) ")")))
+
+(defn format-wallet
+  "Wallet statement: available/reserved cash and stock positions."
+  [{:keys [id name]} {:keys [balance reserved-cash stock reserved-stock]}]
+  (let [symbols (sort (distinct (concat (keys stock) (keys reserved-stock))))]
+    (str/join "\n"
+              (concat [(str "=== CARTEIRA #" id " " name " ===")
+                       (str "  saldo: " (fmt-price balance) (reserved-suffix reserved-cash fmt-price))]
+                      (if (empty? symbols)
+                        ["  (sem ativos)"]
+                        (for [s symbols]
+                          (str "  " s ": " (pad-left 6 (get stock s 0))
+                               (reserved-suffix (get reserved-stock s) str))))))))

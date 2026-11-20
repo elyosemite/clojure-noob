@@ -24,6 +24,26 @@
       (is (str/includes? out "TRADE PETR4    50 @ 31.00 (compra #2 x venda #10)"))
       (is (str/includes? out "TRADE VALE3    20 @ 66.00 (compra #11 x venda #8)")))
 
+    (testing "users"
+      (is (str/includes? out "[USUÁRIO]   #1 Ana  saldo 20000.00"))
+      (is (str/includes? out "[USUÁRIO]   #2 Bruno  saldo 0.00  PETR4 500  VALE3 100")))
+
+    (testing "wallet related rejections"
+      (is (str/includes? out "REJEITADA: saldo insuficiente: necessário 3100.00, disponível 1000.00"))
+      (is (str/includes? out "REJEITADA: ativos insuficientes: VALE3 necessário 10, disponível 0"))
+      (is (str/includes? out "REJEITADA: usuário não encontrado: #99")))
+
+    (testing "final wallets"
+      (is (str/includes? out (str "=== CARTEIRA #1 Ana ===\n"
+                                  "  saldo: 9650.00 (reservado 4360.00)\n"
+                                  "  PETR4:    150\n"
+                                  "  VALE3:     20")))
+      (is (str/includes? out (str "=== CARTEIRA #2 Bruno ===\n"
+                                  "  saldo: 5990.00\n"
+                                  "  PETR4:    180 (reservado 170)\n"
+                                  "  VALE3:     80")))
+      (is (str/includes? out "=== CARTEIRA #3 Carla ===\n  saldo: 1000.00\n  (sem ativos)")))
+
     (testing "cancellations"
       (is (str/includes? out "[CANCELA]   #4 PETR4   200 @ 30.50  OK cancelada"))
       (is (str/includes? out "[CANCELA]   #7 PETR4    10 @ 31.20  OK cancelada"))

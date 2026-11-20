@@ -88,3 +88,39 @@
     (is (= "[CANCELA]  #99  REJEITADO: ordem não encontrada: #99"
            (term/format-cancel-result 99 {:error {:code :order-not-found
                                                   :message "ordem não encontrada: #99"}})))))
+
+;; --- users and wallets (US-05) ---------------------------------------------
+
+(deftest format-user-result-test
+  (testing "registered user with initial stock"
+    (is (= "[USUÁRIO]   #2 Bruno  saldo 0.00  PETR4 500  VALE3 100"
+           (term/format-user-result {:name "Bruno" :balance 0 :stock {"VALE3" 100 "PETR4" 500}}
+                                    {:ok {:id 2 :name "Bruno"}}))))
+
+  (testing "rejected registration"
+    (is (= "[USUÁRIO]       REJEITADO: nome não informado (\"\")"
+           (term/format-user-result {:name "" :balance 0}
+                                    {:error {:code :invalid-name :message "nome não informado"}})))))
+
+(deftest format-wallet-test
+  (testing "cash and positions with reservations"
+    (is (= (str "=== CARTEIRA #2 Bruno ===\n"
+                "  saldo: 5990.00\n"
+                "  PETR4:    180 (reservado 170)\n"
+                "  VALE3:     80")
+           (term/format-wallet {:id 2 :name "Bruno"}
+                               {:balance 5990M :reserved-cash 0M
+                                :stock {"PETR4" 180 "VALE3" 80} :reserved-stock {"PETR4" 170}}))))
+
+  (testing "reserved cash and fully reserved symbol"
+    (is (= (str "=== CARTEIRA #1 Ana ===\n"
+                "  saldo: 9650.00 (reservado 4360.00)\n"
+                "  PETR4:      0 (reservado 10)")
+           (term/format-wallet {:id 1 :name "Ana"}
+                               {:balance 9650M :reserved-cash 4360M
+                                :stock {} :reserved-stock {"PETR4" 10}}))))
+
+  (testing "no positions"
+    (is (= "=== CARTEIRA #3 Carla ===\n  saldo: 1000.00\n  (sem ativos)"
+           (term/format-wallet {:id 3 :name "Carla"}
+                               {:balance 1000M :reserved-cash 0M :stock {} :reserved-stock {}})))))
