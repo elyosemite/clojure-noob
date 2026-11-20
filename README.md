@@ -50,6 +50,22 @@ livro. Ordens já executadas, já canceladas ou inexistentes são rejeitadas:
     [CANCELA]   #5  REJEITADO: ordem já executada
     [CANCELA]  #99  REJEITADO: ordem não encontrada: #99
 
+Cada ordem pertence a um investidor cadastrado. Compra reserva
+`quantidade x preço limite` do saldo; venda reserva os ativos. Sem saldo ou
+ativos suficientes a ordem é rejeitada. Cada trade liquida as duas carteiras
+(o comprador recebe de volta a diferença entre o limite e o preço do negócio)
+e o cancelamento devolve a reserva. Ao final, a demonstração imprime o extrato:
+
+    === CARTEIRA #1 Ana ===
+      saldo: 9650.00 (reservado 4360.00)
+      PETR4:    150
+      VALE3:     20
+
+    === CARTEIRA #2 Bruno ===
+      saldo: 5990.00
+      PETR4:    180 (reservado 170)
+      VALE3:     80
+
 Rodar os testes:
 
     $ lein test
@@ -59,7 +75,7 @@ Rodar os testes:
     src/clojure_noob/
       domain/        regras puras (order, order-book, matching, trade, market, wallet, user)
       repository/    estado em memória (atom)
-      service/       casos de uso (trading-service)
+      service/       casos de uso (trading-service, user-service)
       presentation/  formatação para o terminal
       learning/      exercícios de estudo de Clojure
 

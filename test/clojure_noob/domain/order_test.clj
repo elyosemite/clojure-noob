@@ -3,7 +3,7 @@
             [clojure-noob.domain.order :as order]))
 
 (def valid-params
-  {:id 1 :symbol "PETR4" :quantity 100 :price 30.50 :timestamp 1000})
+  {:id 1 :user-id 7 :symbol "PETR4" :quantity 100 :price 30.50 :timestamp 1000})
 
 (defn- error-code [result]
   (get-in result [:error :code]))
@@ -13,6 +13,7 @@
     (let [{:keys [ok error]} (order/create-buy-order valid-params)]
       (is (nil? error))
       (is (= {:id 1
+              :user-id 7
               :side :buy
               :symbol "PETR4"
               :quantity 100
@@ -56,6 +57,7 @@
 (deftest create-sell-order-valid-test
   (testing "valid params create an open sell order"
     (is (= {:id 1
+            :user-id 7
             :side :sell
             :symbol "PETR4"
             :quantity 100
@@ -117,3 +119,11 @@
     (let [r (order/cancel (:ok (order/cancel open-order)))]
       (is (= :not-cancellable (error-code r)))
       (is (= "ordem já cancelada" (get-in r [:error :message]))))))
+
+;; --- owner (US-05) ---------------------------------------------------------
+
+(deftest user-required-test
+  (testing "order without user-id is rejected before any other rule"
+    (let [r (order/create-sell-order (dissoc valid-params :user-id :symbol))]
+      (is (= :invalid-user (error-code r)))
+      (is (= "usuário não informado" (get-in r [:error :message]))))))

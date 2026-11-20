@@ -4,7 +4,7 @@
             [clojure-noob.domain.order-book :as book]))
 
 (defn- buy [id symbol quantity price timestamp]
-  (:ok (order/create-buy-order {:id id :symbol symbol :quantity quantity
+  (:ok (order/create-buy-order {:id id :user-id 1 :symbol symbol :quantity quantity
                                 :price price :timestamp timestamp})))
 
 (defn- add-all [orders]
@@ -56,7 +56,7 @@
 ;; --- sell side (US-02) -----------------------------------------------------
 
 (defn- sell [id symbol quantity price timestamp]
-  (:ok (order/create-sell-order {:id id :symbol symbol :quantity quantity
+  (:ok (order/create-sell-order {:id id :user-id 1 :symbol symbol :quantity quantity
                                  :price price :timestamp timestamp})))
 
 (deftest asks-empty-test

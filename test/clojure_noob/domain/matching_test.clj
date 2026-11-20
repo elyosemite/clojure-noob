@@ -5,11 +5,11 @@
             [clojure-noob.domain.order-book :as book]))
 
 (defn- buy [id quantity price ts & [symbol]]
-  (:ok (order/create-buy-order {:id id :symbol (or symbol "PETR4") :quantity quantity
+  (:ok (order/create-buy-order {:id id :user-id 1 :symbol (or symbol "PETR4") :quantity quantity
                                 :price price :timestamp ts})))
 
 (defn- sell [id quantity price ts & [symbol]]
-  (:ok (order/create-sell-order {:id id :symbol (or symbol "PETR4") :quantity quantity
+  (:ok (order/create-sell-order {:id id :user-id 1 :symbol (or symbol "PETR4") :quantity quantity
                                  :price price :timestamp ts})))
 
 (defn- book-of [& orders]
