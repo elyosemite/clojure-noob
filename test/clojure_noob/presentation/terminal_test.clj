@@ -75,3 +75,16 @@
   (is (= "    TRADE PETR4    80 @ 31.20 (compra #9 x venda #5)"
          (term/format-trade {:id 1 :symbol "PETR4" :quantity 80 :price 31.2M
                              :buy-order-id 9 :sell-order-id 5 :timestamp 1}))))
+
+;; --- cancel (US-04) --------------------------------------------------------
+
+(deftest format-cancel-result-test
+  (testing "cancelled order shows the remaining quantity that left the book"
+    (is (= "[CANCELA]   #7 PETR4    10 @ 31.20  OK cancelada"
+           (term/format-cancel-result 7 {:ok {:id 7 :side :sell :symbol "PETR4" :quantity 30
+                                              :remaining 10 :price 31.2M :status :cancelled}}))))
+
+  (testing "rejected cancel shows the id and the reason"
+    (is (= "[CANCELA]  #99  REJEITADO: ordem não encontrada: #99"
+           (term/format-cancel-result 99 {:error {:code :order-not-found
+                                                  :message "ordem não encontrada: #99"}})))))
