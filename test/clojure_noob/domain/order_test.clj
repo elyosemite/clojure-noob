@@ -75,3 +75,24 @@
                                 [:price "30"      :invalid-price]]]
       (is (= code (error-code (order/create-sell-order (assoc valid-params field value))))
           (str field " " (pr-str value))))))
+
+;; --- fill (US-03) ----------------------------------------------------------
+
+(def open-order (:ok (order/create-buy-order valid-params)))
+
+(deftest fill-test
+  (testing "partial fill decreases remaining and marks :partially-filled"
+    (let [o (order/fill open-order 30)]
+      (is (= 70 (:remaining o)))
+      (is (= 100 (:quantity o)))
+      (is (= :partially-filled (:status o)))))
+
+  (testing "filling the whole remaining marks :filled"
+    (let [o (order/fill (order/fill open-order 30) 70)]
+      (is (= 0 (:remaining o)))
+      (is (= :filled (:status o)))))
+
+  (testing "rejects zero, negative, fractional or excessive quantity"
+    (doseq [q [0 -1 1.5 101]]
+      (is (thrown? clojure.lang.ExceptionInfo (order/fill open-order q))
+          (str "quantity " q)))))

@@ -41,3 +41,15 @@
 
 (defn create-sell-order [params]
   (create-order :sell params))
+
+(defn fill
+  "Executes `quantity` of `order`: decreases :remaining and updates :status
+  to :partially-filled or :filled. Throws when quantity is not in 1..remaining."
+  [{:keys [remaining] :as order} quantity]
+  (when-not (and (int? quantity) (<= 1 quantity remaining))
+    (throw (ex-info "quantidade executada inválida"
+                    {:quantity quantity :remaining remaining})))
+  (let [left (- remaining quantity)]
+    (assoc order
+           :remaining left
+           :status (if (zero? left) :filled :partially-filled))))
