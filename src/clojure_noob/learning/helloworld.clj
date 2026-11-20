@@ -2,5 +2,5 @@
 
 ;; Your first function in Clojure
 (defn greeting [name]
-  (string "Welcome to Clojure world: " name))
+  (str "Welcome to Clojure world: " name))
   

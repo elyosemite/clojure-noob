@@ -9,4 +9,4 @@
    :symbol symbol
    :quantity quantity
    :price price
-   :timestamp (System/currnetTimeMillis)})
+   :timestamp (System/currentTimeMillis)})
