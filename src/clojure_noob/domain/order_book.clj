@@ -53,3 +53,12 @@
                (if (= :filled status)
                  (vec (rest orders))
                  (assoc orders 0 resting)))))
+
+(defn remove-order
+  "Removes the order with `order`'s id from its symbol/side. Other orders keep
+  their priority. Returns the book unchanged when the id is not there."
+  [book {:keys [id side symbol]}]
+  (let [k (side-key side)]
+    (if (get-in book [symbol k])
+      (update-in book [symbol k] #(filterv (fn [o] (not= id (:id o))) %))
+      book)))
