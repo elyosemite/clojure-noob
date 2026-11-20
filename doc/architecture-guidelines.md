@@ -99,6 +99,7 @@ Represents the amount of money a user has available for trading.
 * Stored as a numeric value in the user’s wallet
 * Updated during buy and sell operations
 * Cannot go below zero
+* Split into available `:balance` and `:reserved-cash` (locked by open buy orders at quantity x limit price)
 
 **Layer**
 
@@ -117,6 +118,7 @@ Tracks the quantity of each stock symbol owned by a user.
 * Portfolio is a map of `symbol -> quantity`
 * Only positive quantities are allowed
 * Updated atomically with cash balance changes
+* Split into available `:stock` and `:reserved-stock` (locked by open sell orders)
 
 **Layer**
 
@@ -226,6 +228,29 @@ Keeps resting limit orders per symbol and matches buyers against sellers.
 * Domain: order-book (pure functions: book in, new book out)
 * Service: trading-service (validation, orchestration)
 * Repository: in-memory atom holding the book, orders and trades
+
+---
+
+### 5.9 Settlement
+
+**Responsibility**
+Keeps wallets consistent with orders and trades.
+
+**Rules**
+
+* Every order belongs to a registered user (`:user-id`)
+* Placing a buy reserves `quantity x limit price`; placing a sell reserves the shares
+* Orders without enough available cash or shares are rejected and change nothing
+* On each trade the buyer pays the trade price (the resting price) and receives the shares; the difference between its limit and the trade price returns to its available balance
+* On each trade the seller delivers reserved shares and receives `quantity x trade price`
+* Cancelling an order releases the reservation of its remaining quantity
+* Total cash and total shares in the system never change (covered by a conservation test)
+
+**Layer**
+
+* Domain: wallet (reserve, release, settle-buy, settle-sell)
+* Service: user-service (registration), trading-service (reservation and settlement)
+* Repository: users and wallets in the same atom
 
 ---
 

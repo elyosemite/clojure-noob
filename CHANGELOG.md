@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file. This change
 
 ## [Unreleased]
 ### Added
+- US-05: carteira com reservas e liquidação (`domain/wallet`): reserva de dinheiro na compra e de ativos na venda, liquidação por trade com devolução da diferença de preço ao comprador e liberação no cancelamento.
+- Cadastro de investidores (`service/user-service`, `register-user!`).
+- Ordens exigem `:user-id`; trades registram `:buyer-id` e `:seller-id`.
+- Rejeições `:user-not-found`, `:insufficient-balance` e `:insufficient-stock`.
+- Terminal exibe cadastro de usuários e extrato das carteiras.
 - US-04: cancelamento de ordem (`order/cancel`, `order-book/remove-order`, `cancel-order!`), com erros `:order-not-found` e `:not-cancellable`.
 - Terminal exibe cancelamentos e os livros antes e depois deles.
 - US-03: motor de casamento puro (`domain/matching`) em prioridade preço-tempo, ao preço da ordem que estava no livro, com execução parcial e por vários níveis.
